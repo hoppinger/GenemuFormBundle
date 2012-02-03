@@ -189,32 +189,34 @@
 {% spaceless %}
     <script type="text/javascript">
         jQuery(document).ready(function($) {
-            var $field = $('#{{ id }}');
-            var $autocompleter = $('#autocompleter_{{ id }}');
-            var $configs = {
-                focus: function(event, ui) {
-                    return false;
-                },
-                select: function(event, ui) {
-                {% if multiple %}
-                    terms = this.value.split(/,\s*/);
-                    terms.pop();
-                    terms.push(ui.item.label);
-                    terms.push('');
-                    this.value = terms.join(', ');
+            var $field 			= $('#{{ id }}'),
+            	$autocompleter 	= $('#autocompleter_{{ id }}'),
+            	$resetter		= function(e) { if (!$(this).val()) $field.val(''); },
+            	$configs 		= {
+                    focus: function(event, ui) {
+                        return false;
+                    },
+                    select: function(event, ui) {
+                    {% if multiple %}
+                        terms = this.value.split(/,\s*/);
+                        terms.pop();
+                        terms.push(ui.item.label);
+                        terms.push('');
+                        this.value = terms.join(', ');
 
-                    terms = $field.val();
-                    terms = !terms?[]:JSON.parse(terms);
-                    terms.push(ui.item);
-                {% else %}
-                    this.value = ui.item.label;
-                    terms = ui.item;
-                {% endif %}
-                    $field.val(JSON.stringify(terms));
+                        terms = $field.val();
+                        terms = !terms?[]:JSON.parse(terms);
+                        terms.push(ui.item);
+                    {% else %}
+                        this.value = ui.item.label;
+                        terms = ui.item;
+                    {% endif %}
+                        $field.val(JSON.stringify(terms));
 
-                    return false;
-                }
-            };
+                        return false;
+                    }
+                };
+
 
             {% if route_name %}
                 $configs.source = function(request, response) {
@@ -227,6 +229,10 @@
             {% endif %}
 
                 $autocompleter.autocomplete($configs);
+
+                $autocompleter.bind($.browser.msie ? 'propertychange': 'change', $resetter);
+                $autocompleter.bind('keyup', $resetter);
+                $autocompleter.bind('cut', $resetter);
 
             {% if multiple %}
                 var $source = $autocompleter.data('autocomplete').source;
